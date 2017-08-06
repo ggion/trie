@@ -1,7 +1,5 @@
 #include "trie.h"
 
-
-
 Node::Node() {}
 Node::Node(char c) : value(c) {}
 
@@ -29,6 +27,11 @@ Node* Node::get_child(const char key)
 	return *x;
 }
 
+Node::~Node()
+{
+	for (auto c : children)
+		delete c;
+}
 
 
 Trie::Trie()
@@ -60,15 +63,59 @@ void Trie::add_word(std::string const &word)
 }
 
 
-bool Trie::search(std::string const &word)
+std::vector<std::string> Trie::find_suffix(std::string const & s, int max)
+{
+	Node *curr = find_string(s);
+	if (!curr || max == 0)
+		return {};
+		
+	std::vector<std::string> output;
+	std::stack<std::pair<Node*, std::string>> st;
+
+	for (auto c : curr->children)
+		st.push({ c, ""});
+	
+	while (!st.empty())
+	{
+		auto p = st.top();
+		st.pop();
+
+		p.second += p.first->get_value();
+		if (p.first->get_leaf())
+		{
+			output.push_back(p.second);
+			if (output.size() == max)
+				break;
+		}
+
+		for (auto c : p.first->children)
+			st.push({ c, p.second });
+
+	}
+
+	return output;
+}
+
+Node* Trie::find_string(std::string const & word)
 {
 	Node *curr = root;
+	std::string str;
 
-	uint32_t i = 0;
 	for (auto c : word)
 		if ((curr = curr->get_child(c)) == nullptr)
-			return false;
+			return nullptr;
 
-	return curr->get_leaf();
+	return curr;
+}
 
+bool Trie::search(std::string const &word)
+{
+	auto *p = find_string(word);
+	if (p) return p->get_leaf();
+	return false;
+}
+
+Trie::~Trie()
+{
+	delete root;
 }
