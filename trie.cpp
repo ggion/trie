@@ -1,22 +1,23 @@
 #include "trie.h"
 
-Node::Node() {}
-Node::Node(char c) : value(c) {}
+Node::Node(char c) : letter(c) {}
 
-char Node::get_value() const { return value < 0 ? -value : value; }
+Node::~Node()
+{
+	for (auto c : children)
+		delete c;
+}
 
-bool Node::get_leaf() const { return value < 0 ? true : false; }
+char Node::get_letter() const { return letter < 0 ? -letter : letter; }
+
+bool Node::is_leaf() const { return letter < 0 ? true : false; }
 
 // a string with char -128 or a nullchar will break this
 void Node::set_leaf()
 {
-	if (value > 0)
-		value = -value;
+	if (letter > 0)
+		letter = -letter;
 }
-
-NodePointerComp::NodePointerComp(const char key) : key_(key) {}
-
-bool NodePointerComp::operator()(Node const *n) const { return n->get_value() == key_; }
 
 Node* Node::get_child(const char key)
 {
@@ -27,16 +28,22 @@ Node* Node::get_child(const char key)
 	return *x;
 }
 
-Node::~Node()
-{
-	for (auto c : children)
-		delete c;
-}
+
+
+NodePointerComp::NodePointerComp(const char key) : key_(key) {}
+
+bool NodePointerComp::operator()(Node const *n) const { return n->get_letter() == key_; }
+
 
 
 Trie::Trie()
 {
 	root = new Node();
+}
+
+Trie::~Trie()
+{
+	delete root;
 }
 
 void Trie::add_word(std::string const &word)
@@ -62,7 +69,6 @@ void Trie::add_word(std::string const &word)
 	
 }
 
-
 std::vector<std::string> Trie::find_suffix(std::string const & s, int max)
 {
 	Node *curr = find_string(s);
@@ -80,8 +86,8 @@ std::vector<std::string> Trie::find_suffix(std::string const & s, int max)
 		auto p = st.top();
 		st.pop();
 
-		p.second += p.first->get_value();
-		if (p.first->get_leaf())
+		p.second += p.first->get_letter();
+		if (p.first->is_leaf())
 		{
 			output.push_back(p.second);
 			if (output.size() == max)
@@ -96,6 +102,13 @@ std::vector<std::string> Trie::find_suffix(std::string const & s, int max)
 	return output;
 }
 
+bool Trie::search(std::string const &word)
+{
+	auto *p = find_string(word);
+	if (p) return p->is_leaf();
+	return false;
+}
+
 Node* Trie::find_string(std::string const & word)
 {
 	Node *curr = root;
@@ -106,16 +119,4 @@ Node* Trie::find_string(std::string const & word)
 			return nullptr;
 
 	return curr;
-}
-
-bool Trie::search(std::string const &word)
-{
-	auto *p = find_string(word);
-	if (p) return p->get_leaf();
-	return false;
-}
-
-Trie::~Trie()
-{
-	delete root;
 }

@@ -9,18 +9,18 @@ namespace {
 	class Node
 	{
 	public:
-		Node();
+		Node() = default;
 		~Node();
 		Node(char c);
-		char get_value() const;
-		bool get_leaf() const;
+		char get_letter() const;
+		bool is_leaf() const;
 		void set_leaf();
 
 		Node* get_child(const char key);
 		std::vector<Node *> children;
 
 	private:
-		char value;
+		char letter;
 	};
 }
 
@@ -28,8 +28,8 @@ class NodePointerComp
 {
 public:
 	explicit NodePointerComp(const char key);
-	char const key_;
 	bool operator()(Node const *n) const;
+	char const key_;
 
 };
 
